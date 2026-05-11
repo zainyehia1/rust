@@ -1,10 +1,14 @@
 use std::env;
+use std::error::Error;
 use std::fs;
 use std::process;
+use minigrep::{search, search_case_insensitive};
+use colored::Colorize;
 
 struct Config {
     query: String,
     file_path: String,
+    ignore_case: bool,
 }
 
 impl Config {
@@ -15,8 +19,10 @@ impl Config {
         
         let query = args[1].clone();
         let file_path = args[2].clone();
+
+        let ignore_case = env::var("IGNORE_CASE").is_ok();
     
-        Ok(Config { query, file_path })
+        Ok(Config { query, file_path, ignore_case })
     }
 }
 
@@ -28,14 +34,30 @@ fn main() {
         process::exit(1);
     });
     
-    println!("Searching for {}", config.query);
-    println!("In file {}", config.file_path);
+    println!("Searching for {} in file {}:", config.query, config.file_path);
 
-    run(config);
+    if let Err(e) = run(config) {
+        println!("Application error: {e}");
+        process::exit(1);
+    }
 }
 
-fn run(config: Config) {
-    let contents = fs::read_to_string(config.file_path).expect("Should have been able to read the file");
+fn run(config: Config) -> Result<(), Box<dyn Error>> {
+    let contents = fs::read_to_string(&config.file_path)?;
 
-    println!("With text: \n{contents}");
+    let search_results = if config.ignore_case {
+        &search_case_insensitive(&config.query, &contents)
+    } else {
+        &search(&config.query, &contents)
+    };
+    
+    if search_results.is_empty() {
+        println!("{}", format!("'{}' was not found in {}.", config.query, config.file_path).red());
+    } else {
+        for line in search_results {
+            println!("{}", line.blue());
+        }
+    }
+    
+    Ok(())
 }
