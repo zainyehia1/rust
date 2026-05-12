@@ -30,14 +30,14 @@ fn main() {
     let args: Vec<String> = env::args().collect();
     
     let config = Config::build(&args).unwrap_or_else(|err| {
-        println!("Problem parsing arguments: {err}");
+        eprintln!("Problem parsing arguments: {err}"); // Writing to stderr
         process::exit(1);
     });
     
     println!("Searching for {} in file {}:", config.query, config.file_path);
 
     if let Err(e) = run(config) {
-        println!("Application error: {e}");
+        eprintln!("Application error: {e}"); // Writing to stderr
         process::exit(1);
     }
 }
