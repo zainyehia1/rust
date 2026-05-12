@@ -54,6 +54,12 @@ fn run(config: Config) -> Result<(), Box<dyn Error>> {
     if search_results.is_empty() {
         println!("{}", format!("'{}' was not found in {}.", config.query, config.file_path).red());
     } else {
+        if search_results.len() == 1 {
+            println!("{}", format!("Found 1 match.").blue());
+        } else {
+            println!("{}", format!("Found {} matches.", search_results.len()).blue());
+        }
+        
         for line in search_results {
             println!("{}", line.blue());
         }
