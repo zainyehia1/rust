@@ -12,13 +12,18 @@ struct Config {
 }
 
 impl Config {
-    fn build(args: &[String]) -> Result<Config, &'static str> {
-        if args.len() < 3 {
-            return Err("Not enough arguments.");
-        }
+    fn build(mut args: impl Iterator<Item = String>) -> Result<Config, &'static str> {
+        args.next();
         
-        let query = args[1].clone();
-        let file_path = args[2].clone();
+        let query = match args.next() {
+            Some(arg) => arg,
+            None => return Err("Didn't get a query string"),
+        };
+        
+        let file_path = match args.next() {
+            Some(arg) => arg,
+            None => return Err("Didn't get a file path"),
+        };
 
         let ignore_case = env::var("IGNORE_CASE").is_ok();
     
@@ -26,10 +31,8 @@ impl Config {
     }
 }
 
-fn main() {
-    let args: Vec<String> = env::args().collect();
-    
-    let config = Config::build(&args).unwrap_or_else(|err| {
+fn main() {    
+    let config = Config::build(env::args()).unwrap_or_else(|err| {
         eprintln!("Problem parsing arguments: {err}"); // Writing to stderr
         process::exit(1);
     });
